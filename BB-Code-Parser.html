@@ -1,0 +1,143 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+	<title>BB Code Content Extractor</title>
+	
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	
+	<link rel="stylesheet" type="text/css" href="scripts/css/style.css" />
+	<link rel="stylesheet" type="text/css" href="scripts/css/colorbox.css" />
+	
+	<style>
+	.hidden { display:none; }
+	.padded_div { padding:30px; }
+	
+	
+	</style>
+	
+	<script type="text/javascript">
+	function refreshFrame() {
+	window.location.href = URL;
+	}
+</script>
+	
+</head>
+
+<body>
+
+	<div id="page-wrap">
+
+		<h1>BB Code Extractor using jQuery &amp; BB-parser library</h1><br /><br />		
+		
+		<div id="form-area">
+		
+				<label for="Message">Enter BB Code:</label><br />
+				<textarea name="code" rows="20" cols="20" id="codeID"></textarea>
+				
+				<label for="Name">Tag to Parse (img / a):</label>
+				<input type="text" name="tag" id="tagID" value="img"/>
+				
+				<input type="submit" name="submit" value="Submit" class="submit-button parsebbcode" />
+
+			<div style="clear: both;"></div>
+			<span class="output">
+			<label for="Message">Output</label><br />
+			<textarea name="parsedOutput" rows="20" cols="20" id="parsedOutputID"></textarea>
+			<label for="Message">HTML Output</label><br />
+			<textarea name="parsedhtmlID" rows="5" cols="5" id="parsedhtmlID"></textarea>
+			<br><span id="hidden_div" class="hide hidden"></span>
+			<a href="#hidden_div" class="hidden content_href"></a>
+			</span>
+			<hr>
+			<span class="input">
+			<form action="#" method="post" id="html_form">
+			
+			<label for="Message">Enter imgur rehosted image links</label><br />
+			<textarea name="imgur_images" rows="20" cols="20" id="imgur_images"></textarea>
+			<input type="hidden" name="htmldata" value="none" id="htmldata">
+			<br><a href="#hidden_div" class="imgur_replace">Replace img</a> <br>
+			<label>Sort Imgur links backwards?</label>
+			<label class="roundedTwo">
+			<input type="checkbox" value="None" id="sequence" name="check" />
+			<label for="sequence"></label>
+			</label>
+			
+			<input type="submit" name="submit" value="Submit" class="submit-button imgur"/>
+			<br><span>&nbsp;&nbsp;<br><br>&nbsp;&nbsp;<br><br></span>
+			</form>
+			</span>
+		</div>
+	</div>
+	
+	<script type="text/javascript" src="scripts/js/jquery-1.9.1.js"></script>
+	<script type="text/javascript" src="scripts/js/xbbcode.js"></script> <!--https://github.com/patorjk/Extendible-BBCode-Parser/-->
+	<script type="text/javascript" src="scripts/js/jquery.colorbox-min.js"></script>
+	<script>
+	$(document).ready(function(){
+		$('.submit-button.imgur').hide();
+		$('input[type=submit].parsebbcode').on('click', function(){
+			var tagname = $('#tagID').val();
+			var codetext = $('#codeID').val();
+			
+			var result = XBBCODE.process({
+						text: codetext,
+						removeMisalignedTags: false,
+						addInLineBreaks: true
+						});
+			
+			var htmlData = result.html;
+			$('textarea#parsedhtmlID').html(htmlData);
+			$('textarea#parsedOutputID').text(extractTagContent(tagname, htmlData));
+			
+		});
+		
+		$('a.imgur_replace').on('click', function(){
+		$('.submit-button.imgur').show();
+		var sort_backwards = $('#sequence').is( ":checked" );
+		var htmldata = $('textarea#parsedhtmlID').val();
+		$('span#hidden_div').html(htmldata);
+		//console.log(htmldata);
+		var imgur = $('textarea#imgur_images').val();
+		imgur = imgur.split('\n');
+		//console.log('________________' + imgur.join(' ..... '));
+		if(sort_backwards){
+		imgur.reverse();
+		}
+		//console.log('________________' + imgur.join(' ..... '));
+		$('span#hidden_div img').each(function(i){
+		$(this).attr('src', imgur[i]);
+		//console.log($(this).attr('src'));
+		});
+		$('input#htmldata').val($('span#hidden_div').html());
+		
+		console.log($('span#hidden_div').html());
+		
+		});
+		
+		$('.submit-button.imgur').on('click', function(e){
+		e.preventDefault();
+		var content_html = '<div class="padded_div"' + $('span#hidden_div').html() + '</div>';
+		$.colorbox({html: content_html });		
+		});
+		
+		function extractTagContent(tag, html){
+		var extractedTags = [], toPush;
+		
+		$('.xbbcode-' + tag, html).each(function(){
+		toPush = $(this).html();
+		if(tag == 'img') toPush = $(this).attr('src');
+		if(tag == 'url') toPush = $(this).attr('href');
+		
+		extractedTags.push(toPush);
+		});
+		
+		return extractedTags.join('\n');
+		}
+		
+	});
+	</script>
+	
+</body>
+
+</html>
